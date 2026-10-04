@@ -1,0 +1,887 @@
+<!doctype html>
+<html lang="es">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>body{margin:0}</style>
+<title>Giro y Arco</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@700;900&family=Fira+Code:wght@400;500&family=Fira+Sans:ital,wght@0,400;0,500;0,600;1,400&family=Fira+Sans+Extra+Condensed:wght@600;700&display=swap" rel="stylesheet">
+<style>
+/* Concepto: la cancha vista desde arriba. Las líneas de cancha estructuran la página, el balón es el protagonista y el naranja es el único acento. Azul solo para el vector de velocidad. */
+:root{
+  --bg:#EEF0F4;
+  --surface:#FFFFFF;
+  --ink:#13203A;
+  --ink-soft:#4A5670;
+  --line:#C9CFDB;
+  --ball:#E4631B;
+  --ball-ink:#B8470A;
+  --vel:#1D6FD6;
+  --wood:#C79A5E;
+  --court:#FFF1D6;
+  --seam:#2A1608;
+  --on-ball:#FFFFFF;
+  --stage:#13203A;
+  --stage-ink:#E9EEF8;
+  --stage-line:#3A4B6E;
+  --good:#1E7F4F;
+  --bad:#B3261E;
+  --f-display:'Big Shoulders Display','Arial Narrow',Impact,sans-serif;
+  --f-math:'Fira Sans Extra Condensed','Arial Narrow',sans-serif;
+  --f-body:'Fira Sans',system-ui,-apple-system,'Segoe UI',sans-serif;
+  --f-mono:'Fira Code',ui-monospace,Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#0C1424;--surface:#131E35;--ink:#E9EEF8;--ink-soft:#9FADC7;--line:#2A3957;
+    --ball:#FF7A2E;--ball-ink:#FF8A47;--vel:#5AA9FF;--wood:#B98B52;--court:#FFF1D6;
+    --stage:#0A101E;--stage-ink:#E9EEF8;--stage-line:#3A4B6E;--good:#4CC38A;--bad:#FF7B72;
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0C1424;--surface:#131E35;--ink:#E9EEF8;--ink-soft:#9FADC7;--line:#2A3957;
+  --ball:#FF7A2E;--ball-ink:#FF8A47;--vel:#5AA9FF;--wood:#B98B52;--court:#FFF1D6;
+  --stage:#0A101E;--stage-ink:#E9EEF8;--stage-line:#3A4B6E;--good:#4CC38A;--bad:#FF7B72;
+  color-scheme:dark;
+}
+
+*,*::before,*::after{box-sizing:border-box}
+html{scroll-behavior:smooth}
+@media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:1.0625rem;line-height:1.65;-webkit-font-smoothing:antialiased}
+h1,h2,h3,p,ul,dl,dd,figure{margin:0}
+.page{overflow-x:clip}
+.wrap{width:100%;max-width:1160px;margin-inline:auto;padding-inline:max(16px,4vw)}
+.sec{padding-block:clamp(3rem,8vw,6rem);scroll-margin-top:64px}
+a{color:inherit}
+:focus-visible{outline:3px solid var(--vel);outline-offset:3px;border-radius:4px}
+
+/* ---------- Cabecera ---------- */
+.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:30;background:color-mix(in srgb,var(--bg) 90%,transparent);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);border-bottom:1px solid var(--line)}
+.top-in{display:flex;align-items:center;justify-content:space-between;gap:1rem;height:56px}
+.brand{display:flex;align-items:center;gap:.6rem;text-decoration:none;font-family:var(--f-display);font-weight:900;font-size:1.35rem;letter-spacing:.04em;text-transform:uppercase;flex:none}
+.nav{display:flex;gap:1.25rem;overflow-x:auto;scrollbar-width:none;min-width:0}
+.nav::-webkit-scrollbar{display:none}
+.nav a{font-size:.9rem;font-weight:500;text-decoration:none;color:var(--ink-soft);white-space:nowrap;padding-block:.35rem}
+.nav a:hover{color:var(--ink)}
+.progress{position:absolute;left:0;right:0;bottom:-1px;height:3px;background:var(--ball);transform:scaleX(0);transform-origin:left}
+@media (max-width:560px){.brand span{display:none}}
+
+/* ---------- Tipografía común ---------- */
+.eyebrow{font-family:var(--f-mono);font-size:.75rem;letter-spacing:.14em;text-transform:uppercase;color:var(--ball-ink);font-weight:500}
+h1{font-family:var(--f-display);font-weight:900;text-transform:uppercase;font-size:clamp(4.2rem,13vw,9.5rem);line-height:.86;letter-spacing:-.005em;text-wrap:balance}
+h1 .y{color:var(--ball)}
+h2{font-family:var(--f-display);font-weight:900;text-transform:uppercase;font-size:clamp(2.3rem,5.4vw,3.8rem);line-height:.95;text-wrap:balance}
+h3{font-family:var(--f-display);font-weight:700;text-transform:uppercase;font-size:clamp(1.5rem,3vw,2rem);line-height:1.02;text-wrap:balance}
+.lede{font-size:clamp(1.1rem,2vw,1.3rem);color:var(--ink-soft);max-width:34em}
+.copy{max-width:36em}
+.copy p+p{margin-top:1rem}
+
+/* ---------- Hero ---------- */
+.hero{position:relative;padding-block:clamp(2rem,6vw,4.5rem) clamp(2.5rem,6vw,4.5rem)}
+.court-bg{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;fill:none;stroke:var(--line);stroke-width:2}
+.hero-in{position:relative;display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,.85fr);gap:clamp(1.5rem,4vw,3rem);align-items:center}
+.hero-copy{display:flex;flex-direction:column;gap:1.25rem;align-items:flex-start}
+.chips{display:flex;flex-wrap:wrap;gap:.5rem;list-style:none;padding:0;margin:.5rem 0 0}
+.chips li{font-family:var(--f-mono);font-size:.82rem;border:1.5px solid var(--ink);border-radius:999px;padding:.3rem .8rem;background:var(--surface)}
+.hero-art{max-width:440px;width:100%;justify-self:center}
+.hero-art svg{display:block;width:100%;height:auto;overflow:visible}
+@media (max-width:820px){.hero-in{grid-template-columns:minmax(0,1fr)}.hero-art{max-width:320px}}
+
+/* ---------- Ilustraciones de balón ---------- */
+.ball-fill{fill:var(--ball)}
+.seam{fill:none;stroke:var(--seam);stroke-linecap:round}
+.ball-rim{fill:none;stroke:var(--seam)}
+.mark{fill:var(--vel);stroke:var(--on-ball);stroke-width:2}
+.track{fill:none;stroke:var(--line);stroke-width:2;stroke-dasharray:4 6}
+.f-wood{fill:var(--wood)}
+.f-stage{fill:var(--stage)}
+.plank{stroke:var(--seam);opacity:.14;stroke-width:2}
+.court{fill:none;stroke:var(--court);stroke-width:3}
+.shadow{fill:#000;opacity:.25}
+.stg{fill:none;stroke:var(--stage-ink);stroke-width:2}
+.stg-dash{fill:none;stroke:var(--stage-line);stroke-width:2;stroke-dasharray:5 5}
+.stg-fill{fill:var(--stage-ink)}
+.stg-arc{fill:none;stroke:var(--ball);stroke-width:7;stroke-linecap:round}
+.stg-w{fill:none;stroke:var(--ball);stroke-width:4;stroke-linecap:round}
+.stg-v{fill:none;stroke:var(--vel);stroke-width:4;stroke-linecap:round}
+.stg-txt{font:500 15px var(--f-mono);fill:var(--stage-ink)}
+.stg-txt-o{font:500 15px var(--f-mono);fill:var(--ball)}
+.stg-txt-v{font:500 15px var(--f-mono);fill:var(--vel)}
+.ah{fill:var(--vel)}
+.ahw{fill:var(--ball)}
+
+/* ---------- Parallax ---------- */
+.px-sec{padding-block:clamp(1rem,4vw,3rem)}
+.px-panel{display:grid;grid-template-columns:minmax(0,1.05fr) minmax(0,.95fr);gap:clamp(1.5rem,5vw,4rem);align-items:center;min-height:min(86vh,720px);padding-block:clamp(2rem,5vw,3.5rem)}
+.px-panel:nth-child(even) .px-fig{order:2}
+.px-fig{display:flex;justify-content:center}
+.px-wrap{width:min(100%,520px);will-change:transform}
+.px-img{aspect-ratio:4/3;max-width:100%;border-radius:16px;overflow:hidden;background:var(--surface);border:1px solid var(--line);will-change:transform,opacity;transform-origin:center}
+.px-img svg{display:block;width:100%;height:100%}
+.px-copy{display:flex;flex-direction:column;gap:1rem}
+.tag{font-family:var(--f-mono);font-size:.76rem;color:var(--ink-soft)}
+@media (max-width:820px){
+  .px-panel{grid-template-columns:minmax(0,1fr);min-height:0}
+  .px-panel:nth-child(even) .px-fig{order:0}
+  .px-wrap{width:min(82%,520px)}
+}
+
+/* ---------- Temas ---------- */
+.topic{border-top:1px solid var(--line)}
+.topic-head{display:flex;flex-direction:column;gap:.75rem;margin-bottom:clamp(1.5rem,4vw,2.5rem);max-width:30em}
+.topic-grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:clamp(1.5rem,4vw,3.5rem);align-items:start}
+@media (max-width:920px){.topic-grid{grid-template-columns:minmax(0,1fr)}}
+.formulas{display:flex;flex-wrap:wrap;gap:.75rem;margin-block:1.5rem}
+.formula{font-family:var(--f-math);font-weight:700;font-size:clamp(2.2rem,5vw,3.3rem);line-height:1;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:.8rem 1.2rem;display:flex;align-items:center;gap:.55rem;flex-wrap:wrap}
+.var{display:inline-block}
+.var.v{color:var(--vel)}
+.var.a{color:var(--ball)}
+.frac{display:inline-flex;flex-direction:column;align-items:center;line-height:1.05}
+.frac>span:first-child{border-bottom:3px solid currentColor;padding-inline:.25em;padding-bottom:.06em}
+.legend{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:.5rem 1.5rem;margin-block:1.25rem}
+.legend div{display:flex;gap:.6rem;align-items:baseline;min-width:0}
+.legend dt{font-family:var(--f-math);font-weight:700;font-size:1.35rem;min-width:1.6rem}
+.legend dd{color:var(--ink-soft);font-size:.95rem}
+.points{padding-left:1.1rem;display:flex;flex-direction:column;gap:.5rem;margin-top:1.25rem}
+.example{margin-top:1.5rem;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:1rem 1.2rem;display:flex;flex-direction:column;gap:.4rem}
+.example code,.calc{font-family:var(--f-mono);font-size:.92rem}
+
+/* ---------- Demos ---------- */
+.demo{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:clamp(1rem,2.5vw,1.5rem);display:flex;flex-direction:column;gap:1rem;min-width:0}
+.demo svg{display:block;width:100%;max-width:440px;height:auto;margin-inline:auto;overflow:visible}
+.controls{display:flex;flex-wrap:wrap;gap:.75rem 1rem;align-items:center}
+.ctl{display:flex;align-items:center;gap:.6rem;flex:1 1 220px;min-width:0;font-size:.95rem}
+.ctl input[type=range]{flex:1;min-width:0;accent-color:var(--ball)}
+.ctl output{font-family:var(--f-mono);font-size:.9rem;min-width:5.5ch;text-align:right}
+.btn{font:600 .92rem var(--f-body);border:1.5px solid var(--ink);background:transparent;color:var(--ink);border-radius:999px;padding:.5rem 1.05rem;cursor:pointer}
+.btn:hover{background:color-mix(in srgb,var(--ink) 8%,transparent)}
+.btn-primary{background:var(--ink);color:var(--bg)}
+.btn-primary:hover{background:color-mix(in srgb,var(--ink) 85%,var(--bg))}
+.readouts{display:grid;grid-template-columns:repeat(auto-fit,minmax(104px,1fr));gap:.6rem}
+.ro{background:var(--bg);border-radius:10px;padding:.55rem .75rem;min-width:0}
+.ro dt{font-family:var(--f-mono);font-size:.7rem;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-soft)}
+.ro dd{font-family:var(--f-mono);font-size:1.05rem;font-weight:500;font-variant-numeric:tabular-nums;white-space:nowrap}
+.ro dd small{font-size:.72rem;color:var(--ink-soft);font-weight:400}
+.cap{font-size:.9rem;color:var(--ink-soft)}
+
+/* ---------- Empleos ---------- */
+.jobs{display:flex;flex-direction:column;gap:clamp(2.5rem,6vw,4.5rem)}
+.job{display:grid;grid-template-columns:minmax(0,5fr) minmax(0,6fr);gap:clamp(1.5rem,4vw,3rem);align-items:center}
+.job:nth-child(even) .job-fig{order:2}
+@media (max-width:820px){.job{grid-template-columns:minmax(0,1fr)}.job:nth-child(even) .job-fig{order:0}}
+.job-fig{background:var(--stage);border-radius:16px;padding:1rem;min-width:0}
+.job-fig svg{display:block;width:100%;max-width:380px;height:auto;margin-inline:auto}
+.job-txt{display:flex;flex-direction:column;gap:.9rem;min-width:0}
+.role{font-family:var(--f-mono);font-size:.75rem;letter-spacing:.14em;text-transform:uppercase;color:var(--ball-ink)}
+.calc{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:.8rem 1rem;overflow-x:auto;white-space:pre;line-height:1.7;font-variant-numeric:tabular-nums}
+.calc b{color:var(--vel);font-weight:500}
+.note{font-size:.88rem;color:var(--ink-soft)}
+
+/* ---------- Quiz ---------- */
+.quiz{max-width:760px;background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:clamp(1.1rem,3vw,2rem);display:flex;flex-direction:column;gap:1.25rem}
+.q-head{display:flex;justify-content:space-between;align-items:center;gap:1rem;flex-wrap:wrap;font-family:var(--f-mono);font-size:.8rem;color:var(--ink-soft)}
+.dots{display:flex;gap:.4rem}
+.dots span{width:11px;height:11px;border-radius:50%;background:var(--line)}
+.dots .on{background:var(--ink)}
+.dots .ok{background:var(--good)}
+.dots .no{background:var(--bad)}
+#qText{font-family:var(--f-body);text-transform:none;font-weight:600;font-size:clamp(1.15rem,2.4vw,1.4rem);line-height:1.35}
+.opts{display:flex;flex-direction:column;gap:.6rem}
+.opt{display:flex;align-items:center;gap:.9rem;width:100%;text-align:left;padding:.8rem 1rem;border:1.5px solid var(--line);background:var(--surface);color:var(--ink);border-radius:12px;font:500 1rem/1.4 var(--f-body);cursor:pointer}
+.opt:hover:not(:disabled){border-color:var(--ink)}
+.opt:disabled{cursor:default;color:var(--ink)}
+.opt .ltr{flex:none;width:2rem;height:2rem;border-radius:50%;border:1.5px solid currentColor;display:grid;place-items:center;font-family:var(--f-mono);font-size:.85rem}
+.opt.is-correct{border-color:var(--good);background:color-mix(in srgb,var(--good) 14%,var(--surface))}
+.opt.is-wrong{border-color:var(--bad);background:color-mix(in srgb,var(--bad) 12%,var(--surface))}
+.opt.is-dim{opacity:.55}
+.q-foot{display:flex;align-items:center;gap:1rem;flex-wrap:wrap;min-height:2.6rem}
+.fb{flex:1 1 260px;min-width:0;font-size:.95rem;display:flex;gap:.7rem;align-items:flex-start}
+.fb svg{flex:none;width:28px;height:28px;overflow:visible}
+.fb p{min-width:0}
+.fb-good strong{color:var(--good)}
+.fb-bad strong{color:var(--bad)}
+.result{display:flex;flex-direction:column;gap:1rem;align-items:flex-start}
+.score{font-family:var(--f-display);font-weight:900;font-size:clamp(4rem,12vw,7rem);line-height:.9;font-variant-numeric:tabular-nums}
+.score span{color:var(--ink-soft)}
+
+footer{border-top:1px solid var(--line);padding-block:2rem;font-family:var(--f-mono);font-size:.78rem;color:var(--ink-soft)}
+</style>
+
+<div class="page">
+<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
+  <defs>
+    <marker id="ah" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" class="ah"/></marker>
+    <marker id="ahw" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" class="ahw"/></marker>
+  </defs>
+</svg>
+
+<header class="top">
+  <div class="wrap top-in">
+    <a class="brand" href="#inicio" aria-label="Giro y Arco, inicio">
+      <svg viewBox="-12 -12 24 24" width="26" height="26" aria-hidden="true"><g data-ball="10"></g></svg>
+      <span>Giro y Arco</span>
+    </a>
+    <nav class="nav" aria-label="Secciones">
+      <a href="#inicio">Inicio</a>
+      <a href="#lineal">Velocidad lineal</a>
+      <a href="#angular">Velocidad angular</a>
+      <a href="#empleos">En el trabajo</a>
+      <a href="#quiz">Quiz</a>
+    </nav>
+  </div>
+  <div class="progress" id="progress"></div>
+</header>
+
+<main>
+<!-- ================= PRESENTACIÓN ================= -->
+<section class="wrap hero" id="inicio">
+  <svg class="court-bg" viewBox="0 0 800 420" preserveAspectRatio="xMaxYMid slice" aria-hidden="true">
+    <circle cx="610" cy="210" r="170"/>
+    <circle cx="610" cy="210" r="56"/>
+    <line x1="610" y1="0" x2="610" y2="420"/>
+    <path d="M610 40 A 170 170 0 0 0 610 380"/>
+  </svg>
+  <div class="hero-in">
+    <div class="hero-copy">
+      <p class="eyebrow">Física del movimiento circular</p>
+      <h1>Giro <span class="y">y</span> Arco</h1>
+      <p class="lede">Un balón de básquet gira sobre su eje y, al mismo tiempo, viaja en arco hacia el aro. Con ese balón vas a ver qué es la velocidad lineal, qué es la velocidad angular y cómo se relacionan.</p>
+      <ul class="chips" aria-label="Fórmulas del tema">
+        <li>s = r·θ</li>
+        <li>v = s / t</li>
+        <li>ω = Δθ / t</li>
+        <li>v = ω·r</li>
+      </ul>
+    </div>
+    <figure class="hero-art">
+      <svg viewBox="0 0 360 360" role="img" aria-label="Un balón de básquet girando con un segundo balón que recorre una órbita circular">
+        <circle cx="180" cy="180" r="152" class="track"/>
+        <g id="heroOrbit"><g transform="translate(332 180)" data-ball="17"></g></g>
+        <g id="heroBall"><g transform="translate(180 180)" data-ball="104"></g></g>
+      </svg>
+    </figure>
+  </div>
+</section>
+
+<!-- Tres imágenes de ejemplo con parallax -->
+<div class="wrap px-sec">
+  <article class="px-panel">
+    <div class="px-fig"><div class="px-wrap"><div class="px-img">
+      <svg viewBox="0 0 400 300" role="img" aria-label="Imagen de ejemplo: balón sobre el círculo central de una cancha">
+        <rect width="400" height="300" class="f-wood"/>
+        <g class="plank"><line x1="40" y1="0" x2="40" y2="300"/><line x1="90" y1="0" x2="90" y2="300"/><line x1="140" y1="0" x2="140" y2="300"/><line x1="260" y1="0" x2="260" y2="300"/><line x1="310" y1="0" x2="310" y2="300"/><line x1="360" y1="0" x2="360" y2="300"/></g>
+        <circle cx="200" cy="150" r="72" class="court"/>
+        <circle cx="200" cy="150" r="22" class="court"/>
+        <line x1="200" y1="0" x2="200" y2="300" class="court"/>
+        <ellipse cx="272" cy="186" rx="26" ry="6" class="shadow"/>
+        <g transform="translate(272 150)" data-ball="30"></g>
+      </svg>
+    </div></div></div>
+    <div class="px-copy reveal">
+      <p class="eyebrow">El círculo</p>
+      <h2>Todo parte del contorno</h2>
+      <p>Un balón de radio 0.12 m tiene un contorno de 2πr, cerca de 0.75 m. Cada punto de su superficie describe círculos cuando el balón gira.</p>
+      <p class="tag">Imagen de ejemplo 1 de 3. Puedes cambiarla por una foto.</p>
+    </div>
+  </article>
+
+  <article class="px-panel">
+    <div class="px-fig"><div class="px-wrap"><div class="px-img">
+      <svg viewBox="0 0 400 300" role="img" aria-label="Imagen de ejemplo: arco de circunferencia con radio r, ángulo θ y longitud de arco s">
+        <rect width="400" height="300" class="f-stage"/>
+        <circle cx="170" cy="160" r="100" class="stg-dash"/>
+        <line x1="170" y1="160" x2="270" y2="160" class="stg-dash"/>
+        <line x1="170" y1="160" x2="227.4" y2="78.1" class="stg"/>
+        <path d="M270 160A100 100 0 0 0 227.4 78.1" class="stg-arc"/>
+        <path d="M196 160A26 26 0 0 0 184.9 138.7" class="stg"/>
+        <g transform="translate(227.4 78.1)" data-ball="15"></g>
+        <text x="205" y="124" class="stg-txt">r</text>
+        <text x="199" y="150" class="stg-txt-o">θ</text>
+        <text x="282" y="112" class="stg-txt-o">s</text>
+        <text x="24" y="276" class="stg-txt">s = r · θ</text>
+      </svg>
+    </div></div></div>
+    <div class="px-copy reveal">
+      <p class="eyebrow">El arco</p>
+      <h2>Un ángulo, una distancia</h2>
+      <p>Cuando un punto avanza un ángulo θ sobre el contorno, recorre un arco de longitud s = r·θ. Con θ en radianes, el arco crece en proporción directa al radio.</p>
+      <p class="tag">Imagen de ejemplo 2 de 3. Puedes cambiarla por una foto.</p>
+    </div>
+  </article>
+
+  <article class="px-panel">
+    <div class="px-fig"><div class="px-wrap"><div class="px-img">
+      <svg viewBox="0 0 400 300" role="img" aria-label="Imagen de ejemplo: balón girando con flecha de velocidad angular ω y vector de velocidad lineal v">
+        <rect width="400" height="300" class="f-stage"/>
+        <path d="M117.7 102.5A95 95 0 0 1 282.3 102.5" class="stg-w" marker-end="url(#ahw)"/>
+        <line x1="200" y1="150" x2="270" y2="150" class="stg-dash"/>
+        <g transform="translate(200 150)"><g data-ball="70"></g></g>
+        <line x1="270" y1="150" x2="270" y2="222" class="stg-v" marker-end="url(#ah)"/>
+        <text x="190" y="40" class="stg-txt-o">ω</text>
+        <text x="284" y="214" class="stg-txt-v">v</text>
+        <text x="228" y="140" class="stg-txt">r</text>
+      </svg>
+    </div></div></div>
+    <div class="px-copy reveal">
+      <p class="eyebrow">El giro</p>
+      <h2>El balón también gira</h2>
+      <p>Cuántos radianes gira cada segundo es su velocidad angular ω. Todos sus puntos comparten ω, pero no todos van igual de rápido.</p>
+      <p class="tag">Imagen de ejemplo 3 de 3. Puedes cambiarla por una foto.</p>
+    </div>
+  </article>
+</div>
+
+<!-- ================= VELOCIDAD LINEAL ================= -->
+<section class="wrap sec topic" id="lineal">
+  <div class="topic-head reveal">
+    <p class="eyebrow">Velocidad lineal · arco</p>
+    <h2>Cuántos metros de arco por segundo</h2>
+  </div>
+  <div class="topic-grid">
+    <div class="copy reveal">
+      <p>Un punto que da vueltas en una circunferencia recorre arcos. La velocidad lineal mide cuántos metros de arco recorre cada segundo: la longitud del arco entre el tiempo que tarda.</p>
+      <div class="formulas" id="fLineal">
+        <div class="formula" role="math" aria-label="v igual a s entre t">
+          <span class="var v">v</span><span>=</span>
+          <span class="frac"><span class="var a">s</span><span>t</span></span>
+        </div>
+        <div class="formula" role="math" aria-label="s igual a r por theta">
+          <span class="var a">s</span><span>=</span><span>r</span><span>·</span><span class="var a">θ</span>
+        </div>
+      </div>
+      <dl class="legend">
+        <div><dt>v</dt><dd>velocidad lineal, en m/s</dd></div>
+        <div><dt>s</dt><dd>longitud del arco, en m</dd></div>
+        <div><dt>t</dt><dd>tiempo, en s</dd></div>
+        <div><dt>r</dt><dd>radio de la circunferencia, en m</dd></div>
+        <div><dt>θ</dt><dd>ángulo recorrido, en radianes</dd></div>
+      </dl>
+      <p>Si sustituyes el arco en la primera fórmula obtienes v = r·θ / t. Como θ / t es la velocidad angular ω, queda v = ω·r.</p>
+      <ul class="points">
+        <li>El vector v es tangente a la circunferencia. Su dirección cambia en cada instante aunque su valor se mantenga.</li>
+        <li>Con el mismo ω, un punto más lejos del centro tiene mayor v.</li>
+        <li>θ debe ir en radianes: 180° = π rad y una vuelta completa = 2π rad.</li>
+      </ul>
+      <div class="example">
+        <span class="eyebrow">Ejemplo resuelto</span>
+        <p>Un balón recorre un arco de 0.6 m en 0.3 s.</p>
+        <code>v = s / t = 0.6 / 0.3 = 2 m/s</code>
+      </div>
+    </div>
+
+    <div class="demo reveal">
+      <svg id="linSvg" viewBox="0 0 400 400" role="img" aria-label="Balón recorriendo una circunferencia; se resalta el arco recorrido y el vector de velocidad tangente">
+        <circle id="linTrack" cx="200" cy="200" r="82" class="track"/>
+        <line x1="200" y1="200" x2="282" y2="200" class="stg-dash" style="stroke:var(--line)"/>
+        <path id="linArc" class="stg-arc"/>
+        <path id="linThArc" fill="none" style="stroke:var(--ball);stroke-width:2"/>
+        <line id="linRadius" x1="200" y1="200" x2="282" y2="200" style="stroke:var(--ink);stroke-width:2"/>
+        <circle cx="200" cy="200" r="4" style="fill:var(--ink)"/>
+        <line id="linVel" class="stg-v" marker-end="url(#ah)"/>
+        <g id="linBall"><g data-ball="13"></g></g>
+        <text id="linLabR" font-family="var(--f-mono)" font-size="14" style="fill:var(--ink)">r</text>
+        <text id="linLabTh" font-family="var(--f-mono)" font-size="15" style="fill:var(--ball-ink)">θ</text>
+        <text id="linLabS" font-family="var(--f-mono)" font-size="15" style="fill:var(--ball-ink)">s</text>
+        <text id="linLabV" font-family="var(--f-mono)" font-size="15" style="fill:var(--vel)">v</text>
+      </svg>
+      <dl class="readouts" aria-live="off">
+        <div class="ro"><dt>t</dt><dd><span id="linT">0.00</span> <small>s</small></dd></div>
+        <div class="ro"><dt>θ</dt><dd><span id="linTh">0.00</span> <small>rad</small></dd></div>
+        <div class="ro"><dt>s = r·θ</dt><dd><span id="linS">0.00</span> <small>m</small></dd></div>
+        <div class="ro"><dt>v = s / t</dt><dd><span id="linV">0.00</span> <small>m/s</small></dd></div>
+      </dl>
+      <div class="controls">
+        <label class="ctl" for="linR">Radio r <input type="range" id="linR" min="0.5" max="3" step="0.1" value="1.5"><output id="linROut" for="linR">1.5 m</output></label>
+        <button type="button" class="btn btn-primary" id="linPlay">Pausar</button>
+        <button type="button" class="btn" id="linReset">Reiniciar</button>
+      </div>
+      <p class="cap">ω se mantiene en 1.2 rad/s. Mueve el radio: el arco s crece con θ y v = s / t cambia en proporción a r.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ================= VELOCIDAD ANGULAR ================= -->
+<section class="wrap sec topic" id="angular">
+  <div class="topic-head reveal">
+    <p class="eyebrow">Velocidad angular</p>
+    <h2>Cuántos radianes por segundo</h2>
+  </div>
+  <div class="topic-grid">
+    <div class="demo reveal">
+      <svg id="angSvg" viewBox="0 0 360 360" role="img" aria-label="Balón girando; el arco naranja muestra el ángulo que gira en un cuarto de segundo">
+        <circle cx="180" cy="180" r="120" class="track"/>
+        <path id="angTrail" class="stg-arc"/>
+        <circle id="angEnd" r="7" style="fill:var(--ball);stroke:var(--bg);stroke-width:2"/>
+        <g transform="translate(180 180)">
+          <g id="angSpin"><g data-ball="100"></g><circle class="mark" cx="0" cy="-76" r="9"/></g>
+        </g>
+      </svg>
+      <dl class="readouts">
+        <div class="ro"><dt>ω</dt><dd><span id="angW">4.0</span> <small>rad/s</small></dd></div>
+        <div class="ro"><dt>Frecuencia</dt><dd><span id="angRpm">38</span> <small>rpm</small></dd></div>
+        <div class="ro"><dt>Periodo T</dt><dd><span id="angT">1.57</span> <small>s</small></dd></div>
+        <div class="ro"><dt>v en el borde</dt><dd><span id="angV">0.48</span> <small>m/s</small></dd></div>
+      </dl>
+      <div class="controls">
+        <label class="ctl" for="angIn">ω <input type="range" id="angIn" min="0.5" max="20" step="0.5" value="4"><output id="angOut" for="angIn">4.0 rad/s</output></label>
+        <button type="button" class="btn btn-primary" id="angPlay">Pausar</button>
+      </div>
+      <p class="cap">El arco naranja es el ángulo que gira el balón en 0.25 s: Δθ = ω · 0.25. Radio del balón: 0.12 m.</p>
+    </div>
+
+    <div class="copy reveal">
+      <p>La velocidad angular dice cuántos radianes gira un cuerpo en cada segundo. Todos los puntos de un cuerpo rígido que gira comparten el mismo ω, esté cerca o lejos del eje.</p>
+      <div class="formulas" id="fAngular">
+        <div class="formula" role="math" aria-label="omega igual a delta theta entre t">
+          <span class="var a">ω</span><span>=</span>
+          <span class="frac"><span class="var a">Δθ</span><span>t</span></span>
+        </div>
+        <div class="formula" role="math" aria-label="omega igual a 2 pi entre T, igual a 2 pi f">
+          <span class="var a">ω</span><span>=</span>
+          <span class="frac"><span>2π</span><span>T</span></span>
+          <span>=</span><span>2π</span><span>f</span>
+        </div>
+      </div>
+      <dl class="legend">
+        <div><dt>ω</dt><dd>velocidad angular, en rad/s</dd></div>
+        <div><dt>Δθ</dt><dd>ángulo girado, en radianes</dd></div>
+        <div><dt>T</dt><dd>periodo: segundos por vuelta</dd></div>
+        <div><dt>f</dt><dd>frecuencia: vueltas por segundo (Hz)</dd></div>
+      </dl>
+      <ul class="points">
+        <li>Una vuelta completa son 2π rad, igual a 360°.</li>
+        <li>Para pasar de rpm a rad/s multiplica por 2π y divide entre 60.</li>
+        <li>Se conecta con la velocidad lineal por v = ω·r.</li>
+      </ul>
+      <div class="example">
+        <span class="eyebrow">Ejemplo resuelto</span>
+        <p>Un balón da 3 vueltas en 2 s.</p>
+        <code>Δθ = 3 × 2π = 6π rad<br>ω = 6π / 2 = 3π ≈ 9.42 rad/s</code>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= EMPLEOS ================= -->
+<section class="wrap sec topic" id="empleos">
+  <div class="topic-head reveal">
+    <p class="eyebrow">Aplicaciones</p>
+    <h2>Dónde se usa en el trabajo</h2>
+  </div>
+  <div class="jobs">
+
+    <article class="job reveal">
+      <figure class="job-fig">
+        <svg id="windSvg" viewBox="0 0 300 260" role="img" aria-label="Aerogenerador con aspas girando; la punta de una aspa muestra el vector de velocidad">
+          <line x1="10" y1="236" x2="290" y2="236" class="stg"/>
+          <path d="M146 110L142 236H158L154 110Z" class="stg-fill" style="opacity:.85"/>
+          <g id="windRotor">
+            <path d="M146.5 110L150 18L153.5 110Z" class="stg-fill"/>
+            <path d="M146.5 110L150 18L153.5 110Z" class="stg-fill" transform="rotate(120 150 110)"/>
+            <path d="M146.5 110L150 18L153.5 110Z" class="stg-fill" transform="rotate(240 150 110)"/>
+            <circle cx="150" cy="110" r="8" class="stg-fill"/>
+            <line x1="150" y1="18" x2="190" y2="18" class="stg-v" marker-end="url(#ah)"/>
+            <circle cx="150" cy="18" r="5.5" style="fill:var(--vel)"/>
+          </g>
+          <text x="14" y="26" class="stg-txt">r = 40 m</text>
+          <text x="14" y="46" class="stg-txt">15 rpm</text>
+        </svg>
+      </figure>
+      <div class="job-txt">
+        <p class="role">Técnico de energía eólica</p>
+        <h3>Aspas lentas, puntas muy rápidas</h3>
+        <p>Un técnico revisa una turbina con aspas de 40 m que gira a 15 rpm. El rotor parece tranquilo, pero la punta de cada aspa se mueve a más de 200 km/h. Por eso el ruido y el desgaste de la punta se calculan con v, no con las rpm.</p>
+<div class="calc">r = 40 m
+ω = 15 × 2π / 60 = 1.57 rad/s
+<b>v = ω · r = 1.57 × 40 = 62.8 m/s</b>
+  ≈ 226 km/h</div>
+        <p class="note">Animación a velocidad real: una vuelta cada 4 s.</p>
+      </div>
+    </article>
+
+    <article class="job reveal">
+      <figure class="job-fig">
+        <svg id="carSvg" viewBox="0 0 300 260" role="img" aria-label="Llanta girando sobre el pavimento; la flecha muestra la velocidad lineal de un punto del borde">
+          <line id="carRoad" x1="-40" y1="228" x2="340" y2="228" stroke-width="5" stroke-dasharray="28 20" style="stroke:var(--stage-line)"/>
+          <g id="carWheel">
+            <circle cx="150" cy="140" r="72" class="stg" stroke-width="16"/>
+            <circle cx="150" cy="140" r="54" class="stg"/>
+            <g class="stg" stroke-width="3">
+              <line x1="150" y1="140" x2="150" y2="86"/>
+              <line x1="150" y1="140" x2="201.4" y2="123.3"/>
+              <line x1="150" y1="140" x2="181.7" y2="183.7"/>
+              <line x1="150" y1="140" x2="118.3" y2="183.7"/>
+              <line x1="150" y1="140" x2="98.6" y2="123.3"/>
+            </g>
+            <circle cx="150" cy="140" r="8" class="stg-fill"/>
+            <line x1="150" y1="60" x2="190" y2="60" class="stg-v" marker-end="url(#ah)"/>
+            <circle cx="150" cy="60" r="5.5" style="fill:var(--vel)"/>
+          </g>
+          <text x="14" y="26" class="stg-txt">r = 0.33 m</text>
+          <text x="14" y="46" class="stg-txt">90 km/h</text>
+        </svg>
+      </figure>
+      <div class="job-txt">
+        <p class="role">Mecánico automotriz</p>
+        <h3>Llantas y velocímetro</h3>
+        <p>Un mecánico cambia las llantas de un auto que viaja a 90 km/h. Como la llanta rueda sin deslizar, el punto de contacto con el suelo avanza lo mismo que el auto. El velocímetro mide ω de la rueda y la multiplica por el radio; con una llanta de mayor radio, el auto va más rápido de lo que marca el tablero.</p>
+<div class="calc">v = 90 km/h = 25 m/s    r = 0.33 m
+<b>ω = v / r = 25 / 0.33 ≈ 75.8 rad/s</b>
+  ≈ 723 rpm
+una vuelta avanza 2π · 0.33 ≈ 2.07 m</div>
+        <p class="note">Animación a escala reducida: el pavimento avanza lo mismo que gira la llanta.</p>
+      </div>
+    </article>
+
+    <article class="job reveal">
+      <figure class="job-fig">
+        <svg id="cenSvg" viewBox="0 0 300 260" role="img" aria-label="Centrífuga de laboratorio vista desde arriba con tubos girando; la flecha muestra la velocidad lineal en el fondo de un tubo">
+          <circle cx="150" cy="130" r="118" class="stg" style="stroke:var(--stage-line)"/>
+          <g id="cenRotor">
+            <circle cx="150" cy="130" r="98" class="stg"/>
+            <g transform="translate(150 130)" class="stg-fill">
+              <rect x="-9" y="-92" width="18" height="58" rx="9"/>
+              <rect x="-9" y="-92" width="18" height="58" rx="9" transform="rotate(60)"/>
+              <rect x="-9" y="-92" width="18" height="58" rx="9" transform="rotate(120)"/>
+              <rect x="-9" y="-92" width="18" height="58" rx="9" transform="rotate(180)"/>
+              <rect x="-9" y="-92" width="18" height="58" rx="9" transform="rotate(240)"/>
+              <rect x="-9" y="-92" width="18" height="58" rx="9" transform="rotate(300)"/>
+              <circle r="12"/>
+            </g>
+            <line x1="150" y1="38" x2="192" y2="38" class="stg-v" marker-end="url(#ah)"/>
+            <circle cx="150" cy="38" r="5.5" style="fill:var(--vel)"/>
+          </g>
+          <text x="14" y="26" class="stg-txt">r = 0.10 m</text>
+          <text x="14" y="46" class="stg-txt">4000 rpm</text>
+        </svg>
+      </figure>
+      <div class="job-txt">
+        <p class="role">Laboratorista clínica</p>
+        <h3>Separar plasma en la centrífuga</h3>
+        <p>Una laboratorista separa plasma de sangre en una centrífuga con rotor de 10 cm de radio a 4000 rpm. El fondo de cada tubo se mueve a casi 42 m/s. Con ω y r también se calcula la fuerza relativa que separa las partículas.</p>
+<div class="calc">r = 0.10 m
+ω = 4000 × 2π / 60 ≈ 418.9 rad/s
+<b>v = ω · r = 418.9 × 0.10 ≈ 41.9 m/s</b>
+  ≈ 151 km/h</div>
+        <p class="note">Animación a escala reducida: la centrífuga real gira unas 67 veces por segundo.</p>
+      </div>
+    </article>
+
+  </div>
+</section>
+
+<!-- ================= QUIZ ================= -->
+<section class="wrap sec topic" id="quiz">
+  <div class="topic-head reveal">
+    <p class="eyebrow">Ponte a prueba</p>
+    <h2>Cinco preguntas, una respuesta correcta en cada una</h2>
+  </div>
+  <div class="quiz reveal" id="quizBox">
+    <div id="quizMain" style="display:contents">
+      <div class="q-head"><span id="qCount">Pregunta 1 de 5</span><div class="dots" id="qDots" aria-hidden="true"></div></div>
+      <h3 id="qText"></h3>
+      <div class="opts" id="qOpts"></div>
+      <div class="q-foot">
+        <div class="fb" id="qFb" aria-live="polite"></div>
+        <button type="button" class="btn btn-primary" id="qNext" hidden>Siguiente</button>
+      </div>
+    </div>
+    <div class="result" id="quizResult" hidden>
+      <p class="eyebrow">Resultado</p>
+      <p class="score"><b id="scoreNum">0</b><span> / 5</span></p>
+      <p id="scoreMsg"></p>
+      <button type="button" class="btn btn-primary" id="qAgain">Intentar de nuevo</button>
+    </div>
+  </div>
+</section>
+</main>
+
+<footer>
+  <div class="wrap">Giro y Arco · velocidad lineal y velocidad angular · animaciones con GSAP y ScrollTrigger</div>
+</footer>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
+<script>
+(function(){
+  gsap.registerPlugin(ScrollTrigger);
+  var reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var TAU = Math.PI * 2;
+  var $ = function(s, c){ return (c || document).querySelector(s); };
+  var $$ = function(s, c){ return Array.prototype.slice.call((c || document).querySelectorAll(s)); };
+  var byId = function(id){ return document.getElementById(id); };
+
+  /* ---------- Balón de básquet (marcado reutilizable) ---------- */
+  function ballMarkup(r){
+    var sw = (r * 0.05).toFixed(2), a = (r * 0.72).toFixed(2), b = (r * 0.69).toFixed(2), c = (r * 0.3).toFixed(2);
+    return '<circle class="ball-fill" r="' + r + '"/>' +
+      '<g class="seam" stroke-width="' + sw + '">' +
+      '<path d="M' + (-r) + ' 0H' + r + 'M0 ' + (-r) + 'V' + r + '"/>' +
+      '<path d="M' + (-a) + ' ' + (-b) + 'Q' + (-c) + ' 0 ' + (-a) + ' ' + b + '"/>' +
+      '<path d="M' + a + ' ' + (-b) + 'Q' + c + ' 0 ' + a + ' ' + b + '"/></g>' +
+      '<circle class="ball-rim" r="' + r + '" stroke-width="' + sw + '"/>';
+  }
+  $$('[data-ball]').forEach(function(g){ g.innerHTML = ballMarkup(parseFloat(g.getAttribute('data-ball'))); });
+
+  /* ---------- Barra de progreso ---------- */
+  gsap.to('#progress', { scaleX: 1, ease: 'none', scrollTrigger: { start: 0, end: 'max', scrub: true } });
+
+  /* ---------- Entrada del hero ---------- */
+  if (!reduce) {
+    gsap.from('.hero .eyebrow, .hero h1, .hero .lede, .hero .chips li', { y: 30, opacity: 0, duration: 0.7, stagger: 0.1, ease: 'power2.out' });
+  }
+  var heroBall = gsap.to('#heroBall', { rotation: 360, duration: 14, repeat: -1, ease: 'none', svgOrigin: '180 180', paused: reduce });
+  var heroOrbit = gsap.to('#heroOrbit', { rotation: 360, duration: 7, repeat: -1, ease: 'none', svgOrigin: '180 180', paused: reduce });
+
+  /* ---------- Aparición de bloques ---------- */
+  if (!reduce) {
+    $$('.reveal').forEach(function(el){
+      gsap.fromTo(el, { y: 28, opacity: 0.1 }, { y: 0, opacity: 1, duration: 0.7, ease: 'power2.out',
+        scrollTrigger: { trigger: el, start: 'top 90%', once: true } });
+    });
+    ['#fLineal', '#fAngular'].forEach(function(sel){
+      gsap.fromTo(sel + ' .var', { scale: 1.35 }, { scale: 1, duration: 0.6, stagger: 0.15, ease: 'back.out(2.2)',
+        scrollTrigger: { trigger: sel, start: 'top 85%', once: true } });
+    });
+  }
+
+  /* ---------- PARALLAX: 3 imágenes ----------
+     - Cada imagen escala de 0.7 a 1.2 y pasa de opacidad 0 a 1 en 600 px de scroll (ease power2.out).
+     - El contenedor se desplaza 20% más lento que el scroll: recorre 0.8 px por cada px de scroll. */
+  $$('.px-panel').forEach(function(panel){
+    var wrap = $('.px-wrap', panel), img = $('.px-img', panel);
+    if (reduce) return;
+    gsap.fromTo(img,
+      { scale: 0.7, opacity: 0 },
+      { scale: 1.2, opacity: 1, ease: 'power2.out',
+        scrollTrigger: { trigger: panel, start: 'top 85%', end: '+=600', scrub: 0.6 } });
+    var travel = function(){ return panel.offsetHeight + window.innerHeight; };
+    gsap.fromTo(wrap,
+      { y: function(){ return -0.1 * travel(); } },
+      { y: function(){ return 0.1 * travel(); }, ease: 'none',
+        scrollTrigger: { trigger: panel, start: 'top bottom', end: 'bottom top', scrub: true, invalidateOnRefresh: true } });
+  });
+
+  /* ---------- Motor de demos (pausa fuera de pantalla) ---------- */
+  var demos = [];
+  gsap.ticker.add(function(time, deltaTime){
+    var dt = Math.min(deltaTime, 50) / 1000;
+    demos.forEach(function(d){ if (d.visible && d.playing) d.step(dt); });
+  });
+  function register(d, trigger){
+    demos.push(d);
+    ScrollTrigger.create({ trigger: trigger, start: 'top bottom', end: 'bottom top', onToggle: function(s){ d.visible = s.isActive; } });
+  }
+
+  /* ---------- Demo: velocidad lineal ---------- */
+  (function(){
+    var CX = 200, CY = 200, PXM = 55, W0 = 1.2, T0 = TAU / W0;
+    var track = byId('linTrack'), radius = byId('linRadius'), arc = byId('linArc'), thArc = byId('linThArc'),
+        ball = byId('linBall'), vel = byId('linVel'),
+        lr = byId('linLabR'), lth = byId('linLabTh'), ls = byId('linLabS'), lv = byId('linLabV'),
+        rIn = byId('linR'), rOut = byId('linROut'), btn = byId('linPlay'), rst = byId('linReset');
+    var o = { t: byId('linT'), th: byId('linTh'), s: byId('linS'), v: byId('linV') };
+    var d = { visible: false, playing: !reduce, t: 1.4, r: parseFloat(rIn.value) };
+    function pt(R, a){ return [CX + R * Math.cos(a), CY - R * Math.sin(a)]; }
+    function arcPath(R, a){
+      if (a < 0.001) return '';
+      var p0 = pt(R, 0), p1 = pt(R, a);
+      return 'M' + p0[0] + ' ' + p0[1] + 'A' + R + ' ' + R + ' 0 ' + (a > Math.PI ? 1 : 0) + ' 0 ' + p1[0] + ' ' + p1[1];
+    }
+    function place(el, p){ el.setAttribute('x', p[0] - 5); el.setAttribute('y', p[1] + 5); }
+    function render(){
+      var R = d.r * PXM, th = W0 * d.t, s = d.r * th;
+      var v = d.t > 0.05 ? s / d.t : d.r * W0;
+      var b = pt(R, th);
+      track.setAttribute('r', R);
+      radius.setAttribute('x2', b[0]); radius.setAttribute('y2', b[1]);
+      arc.setAttribute('d', arcPath(R, th));
+      thArc.setAttribute('d', arcPath(24, th));
+      ball.setAttribute('transform', 'translate(' + b[0] + ' ' + b[1] + ')');
+      var tx = -Math.sin(th), ty = -Math.cos(th), L = v * 12;
+      vel.setAttribute('x1', b[0] + tx * 15); vel.setAttribute('y1', b[1] + ty * 15);
+      vel.setAttribute('x2', b[0] + tx * (15 + L)); vel.setAttribute('y2', b[1] + ty * (15 + L));
+      var mid = pt(R * 0.5, th);
+      place(lr, [mid[0] + Math.sin(th) * 12, mid[1] + Math.cos(th) * 12]);
+      place(lth, pt(42, th / 2));
+      place(ls, pt(R + 20, th / 2));
+      place(lv, [b[0] + tx * (15 + L + 10), b[1] + ty * (15 + L + 10)]);
+      var show = th > 0.3 ? 1 : 0;
+      lth.style.opacity = show; ls.style.opacity = show;
+      o.t.textContent = d.t.toFixed(2);
+      o.th.textContent = th.toFixed(2);
+      o.s.textContent = s.toFixed(2);
+      o.v.textContent = v.toFixed(2);
+    }
+    d.step = function(dt){ d.t = (d.t + dt) % T0; render(); };
+    rIn.addEventListener('input', function(){ d.r = parseFloat(rIn.value); rOut.textContent = d.r.toFixed(1) + ' m'; render(); });
+    btn.textContent = d.playing ? 'Pausar' : 'Reproducir';
+    btn.addEventListener('click', function(){ d.playing = !d.playing; btn.textContent = d.playing ? 'Pausar' : 'Reproducir'; });
+    rst.addEventListener('click', function(){ d.t = 0; render(); });
+    render();
+    register(d, byId('linSvg'));
+  })();
+
+  /* ---------- Demo: velocidad angular ---------- */
+  (function(){
+    var CX = 180, CY = 180, RR = 120, RB = 0.12;
+    var spin = byId('angSpin'), trail = byId('angTrail'), endPt = byId('angEnd');
+    var wIn = byId('angIn'), wOut = byId('angOut'), btn = byId('angPlay');
+    var o = { w: byId('angW'), rpm: byId('angRpm'), T: byId('angT'), v: byId('angV') };
+    var d = { visible: false, playing: !reduce, phi: 0.6, w: parseFloat(wIn.value) };
+    function pt(a){ return [CX + RR * Math.sin(a), CY - RR * Math.cos(a)]; }
+    function render(){
+      spin.setAttribute('transform', 'rotate(' + (d.phi * 180 / Math.PI) + ')');
+      var delta = Math.min(d.w * 0.25, TAU - 0.002);
+      var p0 = pt(d.phi - delta), p1 = pt(d.phi);
+      trail.setAttribute('d', 'M' + p0[0] + ' ' + p0[1] + 'A' + RR + ' ' + RR + ' 0 ' + (delta > Math.PI ? 1 : 0) + ' 1 ' + p1[0] + ' ' + p1[1]);
+      endPt.setAttribute('cx', p1[0]); endPt.setAttribute('cy', p1[1]);
+    }
+    function readouts(){
+      o.w.textContent = d.w.toFixed(1);
+      o.rpm.textContent = Math.round(d.w * 60 / TAU);
+      o.T.textContent = (TAU / d.w).toFixed(2);
+      o.v.textContent = (d.w * RB).toFixed(2);
+      wOut.textContent = d.w.toFixed(1) + ' rad/s';
+    }
+    d.step = function(dt){ d.phi = (d.phi + d.w * dt) % TAU; render(); };
+    wIn.addEventListener('input', function(){ d.w = parseFloat(wIn.value); readouts(); render(); });
+    btn.textContent = d.playing ? 'Pausar' : 'Reproducir';
+    btn.addEventListener('click', function(){ d.playing = !d.playing; btn.textContent = d.playing ? 'Pausar' : 'Reproducir'; });
+    readouts(); render();
+    register(d, byId('angSvg'));
+  })();
+
+  /* ---------- Animaciones de los empleos ---------- */
+  function spinWhenVisible(tween, trigger){
+    ScrollTrigger.create({ trigger: trigger, start: 'top bottom', end: 'bottom top', onToggle: function(s){ if (!reduce) tween.paused(!s.isActive); } });
+  }
+  var wind = gsap.to('#windRotor', { rotation: 360, duration: 4, repeat: -1, ease: 'none', svgOrigin: '150 110', paused: true });
+  spinWhenVisible(wind, byId('windSvg'));
+  var WHEEL_T = 1.2, PX_PER_TURN = TAU * 80;
+  var wheel = gsap.to('#carWheel', { rotation: 360, duration: WHEEL_T, repeat: -1, ease: 'none', svgOrigin: '150 140', paused: true });
+  var road = gsap.to('#carRoad', { attr: { 'stroke-dashoffset': -48 }, duration: WHEEL_T * 48 / PX_PER_TURN, repeat: -1, ease: 'none', paused: true });
+  ScrollTrigger.create({ trigger: byId('carSvg'), start: 'top bottom', end: 'bottom top', onToggle: function(s){ if (!reduce) { wheel.paused(!s.isActive); road.paused(!s.isActive); } } });
+  var cen = gsap.to('#cenRotor', { rotation: 360, duration: 0.9, repeat: -1, ease: 'none', svgOrigin: '150 130', paused: true });
+  spinWhenVisible(cen, byId('cenSvg'));
+
+  /* ---------- Quiz ---------- */
+  var QUESTIONS = [
+    { q: 'Un balón de radio 0.12 m gira con ω = 10 rad/s. ¿Cuál es la velocidad lineal de un punto de su superficie?',
+      opts: ['0.012 m/s', '1.2 m/s', '12 m/s', '83 m/s'], ok: 1,
+      why: 'v = ω · r = 10 × 0.12 = 1.2 m/s.' },
+    { q: '¿Qué fórmula da la longitud de un arco de circunferencia cuando θ está en radianes?',
+      opts: ['s = r / θ', 's = r · θ', 's = θ / r', 's = r² · θ'], ok: 1,
+      why: 'El arco es proporcional al radio y al ángulo: s = r · θ. Con θ = 2π obtienes el contorno completo, 2πr.' },
+    { q: '¿En qué unidad del Sistema Internacional se mide la velocidad angular?',
+      opts: ['m/s', 'rad/s', 'm/s²', 'N·m'], ok: 1,
+      why: 'ω = Δθ / t, así que se mide en radianes por segundo. Las rpm son una unidad práctica, no del SI.' },
+    { q: 'Una rueda da 2 vueltas completas cada segundo. ¿Cuál es su velocidad angular?',
+      opts: ['6.28 rad/s', '12.57 rad/s', '4 rad/s', '25.13 rad/s'], ok: 1,
+      why: 'Cada vuelta son 2π rad, así que ω = 2 × 2π = 4π ≈ 12.57 rad/s.' },
+    { q: 'En un balón que gira se comparan un punto cerca del borde y otro cerca del centro. ¿Qué ocurre?',
+      opts: ['Tienen el mismo ω y el del borde tiene mayor v', 'El del borde tiene mayor ω y la misma v', 'Tienen el mismo ω y la misma v', 'El del centro tiene mayor ω y mayor v'], ok: 0,
+      why: 'Todos los puntos giran el mismo ángulo en el mismo tiempo, así que comparten ω. Como v = ω · r, el del borde, con mayor r, va más rápido.' }
+  ];
+  var quiz = { i: 0, score: 0, answered: false };
+  var qCount = byId('qCount'), qDots = byId('qDots'), qText = byId('qText'), qOpts = byId('qOpts'),
+      qFb = byId('qFb'), qNext = byId('qNext'), quizMain = byId('quizMain'), quizResult = byId('quizResult'),
+      scoreNum = byId('scoreNum'), scoreMsg = byId('scoreMsg'), qAgain = byId('qAgain');
+
+  function shuffle(arr){
+    for (var i = arr.length - 1; i > 0; i--){ var j = Math.floor(Math.random() * (i + 1)); var t = arr[i]; arr[i] = arr[j]; arr[j] = t; }
+    return arr;
+  }
+  function drawDots(){
+    qDots.innerHTML = '';
+    QUESTIONS.forEach(function(q, k){
+      var s = document.createElement('span');
+      var st = quiz.marks && quiz.marks[k];
+      s.className = st ? st : (k === quiz.i ? 'on' : '');
+      qDots.appendChild(s);
+    });
+  }
+  function renderQ(){
+    var Q = QUESTIONS[quiz.i];
+    quiz.answered = false;
+    qCount.textContent = 'Pregunta ' + (quiz.i + 1) + ' de ' + QUESTIONS.length;
+    qText.textContent = Q.q;
+    qFb.innerHTML = '';
+    qNext.hidden = true;
+    qOpts.innerHTML = '';
+    var order = shuffle(Q.opts.map(function(t, idx){ return { t: t, idx: idx }; }));
+    order.forEach(function(opt, k){
+      var b = document.createElement('button');
+      b.type = 'button'; b.className = 'opt'; b.setAttribute('data-ok', opt.idx === Q.ok ? '1' : '0');
+      var l = document.createElement('span'); l.className = 'ltr'; l.textContent = 'ABCD'.charAt(k);
+      var tx = document.createElement('span'); tx.textContent = opt.t;
+      b.appendChild(l); b.appendChild(tx);
+      b.addEventListener('click', function(){ pick(b); });
+      qOpts.appendChild(b);
+    });
+    drawDots();
+    if (!reduce) {
+      gsap.from(qText, { y: 14, opacity: 0, duration: 0.4, ease: 'power2.out' });
+      gsap.from('#qOpts .opt', { y: 16, opacity: 0, duration: 0.45, stagger: 0.07, ease: 'power2.out' });
+    }
+  }
+  function pick(btn){
+    if (quiz.answered) return;
+    quiz.answered = true;
+    var Q = QUESTIONS[quiz.i];
+    var good = btn.getAttribute('data-ok') === '1';
+    $$('#qOpts .opt').forEach(function(b){
+      b.disabled = true;
+      if (b.getAttribute('data-ok') === '1') b.classList.add('is-correct');
+      else if (b === btn) b.classList.add('is-wrong');
+      else b.classList.add('is-dim');
+    });
+    quiz.marks = quiz.marks || [];
+    quiz.marks[quiz.i] = good ? 'ok' : 'no';
+    if (good) quiz.score++;
+    drawDots();
+    qFb.className = 'fb ' + (good ? 'fb-good' : 'fb-bad');
+    qFb.innerHTML = '<svg viewBox="-14 -14 28 28" aria-hidden="true"><g id="fbBall"></g></svg><p><strong>' + (good ? 'Correcto.' : 'Incorrecto.') + '</strong> ' + Q.why + '</p>';
+    byId('fbBall').innerHTML = ballMarkup(12);
+    qNext.textContent = quiz.i === QUESTIONS.length - 1 ? 'Ver resultado' : 'Siguiente';
+    qNext.hidden = false;
+    if (!reduce) {
+      if (good) {
+        gsap.fromTo('#fbBall', { y: 0 }, { y: -16, duration: 0.2, repeat: 5, yoyo: true, ease: 'power2.out' });
+        gsap.fromTo(btn, { scale: 1 }, { scale: 1.02, duration: 0.18, yoyo: true, repeat: 1, ease: 'power2.out' });
+      } else {
+        gsap.fromTo(btn, { x: -8 }, { x: 0, duration: 0.5, ease: 'elastic.out(1,0.35)' });
+      }
+      gsap.from(qFb, { opacity: 0, y: 8, duration: 0.35, ease: 'power2.out' });
+    }
+  }
+  function showResult(){
+    quizMain.style.display = 'none';
+    quizResult.hidden = false;
+    var msgs = ['Repasa las fórmulas de arriba y vuelve a intentarlo.', 'Vas por buen camino. Revisa v = ω·r.', 'Buen avance. Te faltan un par de detalles.', 'Muy bien. Casi perfecto.', 'Casi perfecto. Un repaso más y lo tienes.', 'Perfecto. Dominas velocidad lineal y angular.'];
+    scoreMsg.textContent = msgs[quiz.score];
+    if (reduce) { scoreNum.textContent = quiz.score; return; }
+    var obj = { n: 0 };
+    gsap.to(obj, { n: quiz.score, duration: 0.9, ease: 'power2.out', onUpdate: function(){ scoreNum.textContent = Math.round(obj.n); } });
+    gsap.from(quizResult, { y: 18, opacity: 0, duration: 0.5, ease: 'power2.out' });
+  }
+  qNext.addEventListener('click', function(){
+    if (quiz.i < QUESTIONS.length - 1) { quiz.i++; renderQ(); } else { showResult(); }
+  });
+  qAgain.addEventListener('click', function(){
+    quiz = { i: 0, score: 0, answered: false, marks: [] };
+    quizResult.hidden = true;
+    quizMain.style.display = 'contents';
+    renderQ();
+  });
+  renderQ();
+
+  window.addEventListener('load', function(){ ScrollTrigger.refresh(); });
+})();
+</script>
+
+</html>
